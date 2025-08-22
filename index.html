@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project To-Do List</title>
+    <style>
+        /* General Body Styling */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f7f9;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* Main container */
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+        }
+
+        /* Input and Button Styling */
+        input[type="text"],
+        input[type="date"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            background-color: #3498db;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        /* Project Adder Section */
+        .project-adder {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .project-adder input {
+            flex-grow: 1;
+            margin-bottom: 0;
+        }
+
+        /* Project Styling */
+        .project {
+            background-color: #fdfdfd;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .project-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 10px;
+            gap: 10px; /* Add gap for spacing */
+        }
+
+        .project h2 {
+            margin: 0;
+            color: #34495e;
+            flex-grow: 1; /* Allow title to take available space */
+        }
+        
+        /* Status Indicator Styling */
+        .project-status {
+            font-size: 0.8em;
+            font-weight: bold;
+            padding: 4px 10px;
+            border-radius: 12px;
+            color: white;
+            flex-shrink: 0; /* Prevent the indicator from shrinking */
+        }
+
+        .project-status.overdue {
+            background-color: #e74c3c; /* Red */
+        }
+
+        .project-status.due-today {
+            background-color: #f39c12; /* Orange */
+        }
+
+        .delete-project-btn {
+            background: none;
+            border: none;
+            color: #bdc3c7;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 0 5px;
+            line-height: 1;
+            transition: color 0.2s ease;
+        }
+
+        .delete-project-btn:hover {
+            color: #e74c3c;
+        }
+
+        /* Step Adder Form */
+        .step-adder-form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            margin-top: 15px;
+        }
+
+        .step-adder-form .step-text {
+            flex: 2 1 200px;
+        }
+
+        .step-adder-form .step-date {
+            flex: 1 1 150px;
+        }
+        
+        .step-adder-form button {
+            flex: 0 1 auto;
+        }
+
+        /* Step List Styling */
+        .steps-list {
+            list-style-type: none;
+            padding: 0;
+            margin-top: 20px;
+        }
+
+        .step-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 5px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .step-item:last-child {
+            border-bottom: none;
+        }
+        
+        .step-item input[type="checkbox"] {
+            margin-right: 15px;
+            width: 18px;
+            height: 18px;
+        }
+
+        .step-item label {
+            flex-grow: 1;
+        }
+        
+        .step-item.completed label {
+            text-decoration: line-through;
+            color: #95a5a6;
+        }
+
+        .step-item .due-date {
+            font-size: 0.9em;
+            color: #7f8c8d;
+            background-color: #ecf0f1;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Project To-Do List 📋</h1>
+
+        <div class="project-adder">
+            <input type="text" id="new-project-name" placeholder="Enter a new major project...">
+            <button id="add-project-btn">Add Project</button>
+        </div>
+
+        <div id="projects-container"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const addProjectBtn = document.getElementById('add-project-btn');
+            const newProjectNameInput = document.getElementById('new-project-name');
+            const projectsContainer = document.getElementById('projects-container');
+
+            // --- NEW: Cookie Helper Functions ---
+            const setCookie = (name, value, days) => {
+                let expires = "";
+                if (days) {
+                    const date = new Date();
+                    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                    expires = "; expires=" + date.toUTCString();
+                }
+                document.cookie = name + "=" + (value || "") + expires + "; path=/; SameSite=Lax";
+            };
+
+            const getCookie = (name) => {
+                const nameEQ = name + "=";
+                const ca = document.cookie.split(';');
+                for (let i = 0; i < ca.length; i++) {
+                    let c = ca[i];
+                    while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+                    if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+                }
+                return null;
+            };
+
+            // --- NEW: State Management Functions ---
+            const saveStateToCookie = () => {
+                const projects = [];
+                document.querySelectorAll('.project').forEach(projectDiv => {
+                    const projectName = projectDiv.querySelector('h2').textContent;
+                    const steps = [];
+                    projectDiv.querySelectorAll('.step-item').forEach(stepItem => {
+                        steps.push({
+                            text: stepItem.querySelector('label').textContent,
+                            dueDate: stepItem.dataset.date,
+                            completed: stepItem.querySelector('input[type="checkbox"]').checked
+                        });
+                    });
+                    projects.push({ projectName, steps });
+                });
+                setCookie('todoListState', JSON.stringify(projects), 7); // Save for 7 days
+            };
+
+            const loadStateFromCookie = () => {
+                const state = getCookie('todoListState');
+                if (state) {
+                    const projects = JSON.parse(state);
+                    projects.forEach(projectData => {
+                        const projectDiv = createProjectElement(projectData.projectName);
+                        const stepsList = projectDiv.querySelector('.steps-list');
+                        projectData.steps.forEach(stepData => {
+                            const stepItem = createStepElement(stepData);
+                            stepsList.appendChild(stepItem);
+                        });
+                        projectsContainer.appendChild(projectDiv);
+                        sortSteps(stepsList);
+                        updateProjectStatus(projectDiv);
+                    });
+                }
+            };
+
+            // --- Refactored: Element Creation Functions ---
+            const createProjectElement = (projectName) => {
+                const projectDiv = document.createElement('div');
+                projectDiv.className = 'project';
+                projectDiv.innerHTML = `
+                    <div class="project-header">
+                        <h2>${projectName}</h2>
+                        <span class="project-status"></span>
+                        <button class="delete-project-btn" title="Delete this project">✖</button>
+                    </div>
+                    <div class="step-adder-form">
+                        <input type="text" class="step-text" placeholder="Add a new step...">
+                        <input type="date" class="step-date">
+                        <button class="add-step-btn">Add Step</button>
+                    </div>
+                    <ul class="steps-list"></ul>
+                `;
+                return projectDiv;
+            };
+            
+            const createStepElement = (stepData) => { // stepData = { text, dueDate, completed }
+                const stepItem = document.createElement('li');
+                stepItem.className = 'step-item';
+                stepItem.dataset.date = stepData.dueDate;
+                if (stepData.completed) {
+                    stepItem.classList.add('completed');
+                }
+
+                stepItem.innerHTML = `
+                    <input type="checkbox" ${stepData.completed ? 'checked' : ''}>
+                    <label>${stepData.text}</label>
+                    <span class="due-date">${stepData.dueDate}</span>
+                `;
+                return stepItem;
+            };
+
+            // --- Core Logic Functions ---
+            const addProject = () => {
+                const projectName = newProjectNameInput.value.trim();
+                if (projectName === '') {
+                    alert('Please enter a project name.');
+                    return;
+                }
+                const projectDiv = createProjectElement(projectName);
+                projectsContainer.appendChild(projectDiv);
+                newProjectNameInput.value = '';
+                saveStateToCookie();
+            };
+
+            const addStep = (e) => {
+                const projectDiv = e.target.closest('.project');
+                const stepTextInput = projectDiv.querySelector('.step-text');
+                const stepDateInput = projectDiv.querySelector('.step-date');
+                const stepsList = projectDiv.querySelector('.steps-list');
+
+                const stepData = {
+                    text: stepTextInput.value.trim(),
+                    dueDate: stepDateInput.value,
+                    completed: false
+                };
+
+                if (stepData.text === '' || stepData.dueDate === '') {
+                    alert('Please provide both a step description and a due date.');
+                    return;
+                }
+
+                const stepItem = createStepElement(stepData);
+                stepsList.appendChild(stepItem);
+
+                stepTextInput.value = '';
+                stepDateInput.value = '';
+                
+                sortSteps(stepsList);
+                updateProjectStatus(projectDiv);
+                saveStateToCookie();
+            };
+            
+            const sortSteps = (stepsList) => {
+                const steps = Array.from(stepsList.children);
+                steps.sort((a, b) => new Date(a.dataset.date) - new Date(b.dataset.date));
+                steps.forEach(step => stepsList.appendChild(step));
+            };
+
+            const toggleStepComplete = (e) => {
+                const stepItem = e.target.closest('.step-item');
+                stepItem.classList.toggle('completed', e.target.checked);
+                const projectDiv = e.target.closest('.project');
+                updateProjectStatus(projectDiv);
+                saveStateToCookie();
+            };
+
+            const updateProjectStatus = (projectDiv) => {
+                const statusIndicator = projectDiv.querySelector('.project-status');
+                const uncheckedSteps = projectDiv.querySelectorAll('.step-item:not(.completed)');
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                let isOverdue = false;
+                let isDueToday = false;
+
+                for (const step of uncheckedSteps) {
+                    const dueDate = new Date(step.dataset.date + 'T00:00:00');
+                    if (dueDate < today) {
+                        isOverdue = true;
+                        break;
+                    }
+                    if (dueDate.getTime() === today.getTime()) {
+                        isDueToday = true;
+                    }
+                }
+
+                statusIndicator.textContent = '';
+                statusIndicator.className = 'project-status';
+
+                if (isOverdue) {
+                    statusIndicator.textContent = 'OVERDUE';
+                    statusIndicator.classList.add('overdue');
+                } else if (isDueToday) {
+                    statusIndicator.textContent = 'DUE TODAY';
+                    statusIndicator.classList.add('due-today');
+                }
+            };
+
+            // --- Event Listeners ---
+            addProjectBtn.addEventListener('click', addProject);
+            newProjectNameInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') addProject();
+            });
+
+            projectsContainer.addEventListener('click', (e) => {
+                if (e.target.classList.contains('add-step-btn')) {
+                    addStep(e);
+                }
+                if (e.target.classList.contains('delete-project-btn')) {
+                    e.target.closest('.project').remove();
+                    saveStateToCookie(); // Save state after deleting a project
+                }
+            });
+            
+            projectsContainer.addEventListener('change', (e) => {
+                if (e.target.type === 'checkbox') {
+                    toggleStepComplete(e);
+                }
+            });
+            
+            // --- Initial Load ---
+            loadStateFromCookie();
+        });
+    </script>
+
+</body>
+</html>
