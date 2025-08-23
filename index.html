@@ -187,6 +187,14 @@
             border-radius: 4px;
         }
 
+         .delete-step-btn {
+            background: none; border: none; color: #bdc3c7;
+            font-size: 20px; cursor: pointer; padding: 0 5px;
+            margin-left: 10px; line-height: 1; transition: color 0.2s ease;
+        }
+
+        .delete-step-btn:hover { color: #c0392b; }
+
     </style>
 </head>
 <body>
@@ -277,7 +285,7 @@
                         <button class="delete-project-btn" title="Delete this project">✖</button>
                     </div>
                     <div class="step-adder-form">
-                        <input type="text" class="step-text" placeholder="Add a new step...">
+                        <input type="text" class="step-text" placeholder="Add a new task or process step...">
                         <input type="date" class="step-date">
                         <button class="add-step-btn">Add Step</button>
                     </div>
@@ -309,10 +317,26 @@
                 }
 
 
+             // Get today's date in YYYY-MM-DD format
+                const today = new Date();
+                const year = today.getFullYear();
+                const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+                const day = String(today.getDate()).padStart(2, '0');
+                const todayString = `${year}-${month}-${day}`;
+
+            // Check if the due date is today and create an inline style string
+                const isDueToday = stepData.dueDate === todayString;
+                const dueTodayStyle = isDueToday ? 'style="color: blue; font-weight: bold;"' : '';
+                if (isDueToday) {
+                    stepData.dueDate = "Today";
+                }
+
+
                 stepItem.innerHTML = `
                     <input type="checkbox" ${stepData.completed ? 'checked' : ''}>
                     <label>${stepData.text}</label>
                     <span class="due-date" ${dueTodayStyle}>${stepData.dueDate}</span>
+                    <button class="delete-step-btn" title="Delete this">✖</button>
                 `;
                 return stepItem;
             };
@@ -411,12 +435,21 @@
             });
 
             projectsContainer.addEventListener('click', (e) => {
+                // Add a step
                 if (e.target.classList.contains('add-step-btn')) {
                     addStep(e);
                 }
+                // Delete a project
                 if (e.target.classList.contains('delete-project-btn')) {
                     e.target.closest('.project').remove();
                     saveStateToCookie(); // Save state after deleting a project
+                }
+                // Delete a step
+                if (e.target.classList.contains('delete-step-btn')) {
+                    const projectDiv = e.target.closest('.project');
+                    e.target.closest('.step-item').remove();
+                    updateProjectStatus(projectDiv);
+                    saveStateToCookie();
                 }
             });
             
@@ -432,6 +465,8 @@
     </script>
 
 </body>
+<footer style="bottom: 5px; left: 0; right: 0; text-align: center;">
+    <p>Created by Connor Ciecko &copy 2025. Released under GPL-3.0 license.</p>
 <footer style="bottom: 5px; left: 0; right: 0; text-align: center;">
     <p>Created by Connor Ciecko &copy 2025. Released under GPL-3.0 license.</p>
 </footer>
