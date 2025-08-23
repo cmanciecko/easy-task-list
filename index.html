@@ -317,21 +317,6 @@
                 }
 
 
-             // Get today's date in YYYY-MM-DD format
-                const today = new Date();
-                const year = today.getFullYear();
-                const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
-                const day = String(today.getDate()).padStart(2, '0');
-                const todayString = `${year}-${month}-${day}`;
-
-            // Check if the due date is today and create an inline style string
-                const isDueToday = stepData.dueDate === todayString;
-                const dueTodayStyle = isDueToday ? 'style="color: blue; font-weight: bold;"' : '';
-                if (isDueToday) {
-                    stepData.dueDate = "Today";
-                }
-
-
                 stepItem.innerHTML = `
                     <input type="checkbox" ${stepData.completed ? 'checked' : ''}>
                     <label>${stepData.text}</label>
@@ -465,8 +450,6 @@
     </script>
 
 </body>
-<footer style="bottom: 5px; left: 0; right: 0; text-align: center;">
-    <p>Created by Connor Ciecko &copy 2025. Released under GPL-3.0 license.</p>
 <footer style="bottom: 5px; left: 0; right: 0; text-align: center;">
     <p>Created by Connor Ciecko &copy 2025. Released under GPL-3.0 license.</p>
 </footer>
