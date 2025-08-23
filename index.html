@@ -208,7 +208,7 @@
             const newProjectNameInput = document.getElementById('new-project-name');
             const projectsContainer = document.getElementById('projects-container');
 
-            // --- NEW: Cookie Helper Functions ---
+            // --- Cookie Helper Functions ---
             const setCookie = (name, value, days) => {
                 let expires = "";
                 if (days) {
@@ -230,7 +230,7 @@
                 return null;
             };
 
-            // --- NEW: State Management Functions ---
+            // --- State Management Functions ---
             const saveStateToCookie = () => {
                 const projects = [];
                 document.querySelectorAll('.project').forEach(projectDiv => {
@@ -266,7 +266,7 @@
                 }
             };
 
-            // --- Refactored: Element Creation Functions ---
+            // --- Element Creation Functions ---
             const createProjectElement = (projectName) => {
                 const projectDiv = document.createElement('div');
                 projectDiv.className = 'project';
@@ -417,4 +417,7 @@
     </script>
 
 </body>
+<footer>
+    <h5 style="position: absolute; bottom: 5px; left: 0; right: 0; text-align: center">Created by Connor Ciecko (C) 2025. Released under GPL-3.0 license.</h5>
+</footer>
 </html>
